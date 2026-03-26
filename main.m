@@ -3,14 +3,14 @@ folder = '.\IDRiD\A. Segmentation\1. Original Images\a. Training Set';
 
 files = dir(fullfile(folder, '*.jpg')); % cambia estensione se serve
 
-for k = 1:length(files)
+for k = 1:3
     filename = fullfile(folder, files(k).name);
     img = imread(filename);
     pause(0.5); % per vedere le immagini una dopo l'altra
+    figure
+    igray=rgb2gray(img);
+    i_equalized=adapthisteq(igray) %applica CLAHE
+    imshowpair(igray, i_equalized, 'montage')
+    title('Originale vs CLAHE')
 end
 
-
-igray=rgb2gray(img)
-i_equalized=adapthisteq(igray) %applica CLAHE
-imshowpair(igray, i_equalized, 'montage')
-title('Originale vs CLAHE')
