@@ -3,14 +3,35 @@ folder = '.\IDRiD\A. Segmentation\1. Original Images\a. Training Set';
 
 files = dir(fullfile(folder, '*.jpg')); % cambia estensione se serve
 
-for k = 1:3
+%PROVA CON 1 IMMAGINE PER CAPIRE CHE SUCCEDE
+for k = 1:2
     filename = fullfile(folder, files(k).name);
-    img = imread(filename);
-    pause(0.5); % per vedere le immagini una dopo l'altra
-    figure
-    igray=rgb2gray(img);
-    i_equalized=adapthisteq(igray) %applica CLAHE
-    imshowpair(igray, i_equalized, 'montage')
-    title('Originale vs CLAHE')
+    startingImg = imread(filename);
+    imshow(startingImg)
+    figure(1)
+    title('Immagine di Partenza')
+
+    greenChannelImg=startingImg(:, :, 2);
+    figure(2)
+    imshow(greenChannelImg)
+    title('Immagine Channel Verde')
+    
+    %PROVA CON SIGMA=50
+    background=imgaussfilt(greenChannelImg, 50);
+    figure(3)
+    plot(background)
+    title('Grafico filtro Gaussiano Largo con sigma=50')
+
+    figure(4)
+    greenChannelImg=greenChannelImg-background;
+    imshow(greenChannelImg)
+    title('Immagine Channel Verde senza background')
+
+    figure(5)
+    greenChannelEqualized=adapthisteq(greenChannelImg, 'ClipLimit', 0.02, 'NumTiles', [8 8]);
+    imshow(greenChannelEqualized)
+    title('Immagine con CLAHE')
+
+    
 end
 
