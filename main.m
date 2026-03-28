@@ -19,7 +19,7 @@ for k = 1:2
     %PROVA CON SIGMA=50
     background=imgaussfilt(greenChannelImg, 50);
     figure(3)
-    plot(background)
+    imshow(background)
     title('Grafico filtro Gaussiano Largo con sigma=50')
 
     figure(4)
