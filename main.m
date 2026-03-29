@@ -35,3 +35,15 @@ for k = 1:2
     
 end
 
+%ESPERIMENTO, UTILIZZO DI THRESHOLDING INVECE DI TRASHOLD ADATTIVA
+f=im2double(greenChannelEqualized);
+T1=0.5*mean(f(:));
+done=false;
+while ~ done
+    g= f>=T1;
+    TNext=0.5*(mean(f(g))+mean(f( ~ g)));
+    done= abs(T1-TNext)<0.5;
+    T1=TNext;
+end 
+BW=imbinarize(f,TNext);
+imshowpair(f,BW, 'montage')
