@@ -1,51 +1,54 @@
-
 folder = '.\IDRiD\A. Segmentation\1. Original Images\a. Training Set';
+files = dir(fullfile(folder, '*.jpg'));
 
-files = dir(fullfile(folder, '*.jpg')); % cambia estensione se serve
-
-%PROVA CON 1 IMMAGINE PER CAPIRE CHE SUCCEDE
 for k = 1:2
     filename = fullfile(folder, files(k).name);
     startingImg = imread(filename);
-    imshow(startingImg)
-    figure(1)
-    title('Immagine di Partenza')
 
-    greenChannelImg=startingImg(:, :, 2);
-    figure(2)
-    imshow(greenChannelImg)
-    title('Immagine Channel Verde')
-    
-    %PROVA CON SIGMA=50
-    background=imgaussfilt(greenChannelImg, 50);
-    figure(3)
-    plot(background)
-    title('Grafico filtro Gaussiano Largo con sigma=50')
+    figure(1); imshow(startingImg); title('Immagine di Partenza')
 
-    figure(4)
-    greenChannelImg=greenChannelImg-background;
-    imshow(greenChannelImg)
-    title('Immagine Channel Verde senza background')
+    % Canale verde
+    greenChannelImg = startingImg(:,:,2);
+    figure(2); imshow(greenChannelImg); title('Canale Verde')
 
-    figure(5)
-    greenChannelEqualized=adapthisteq(greenChannelImg, 'ClipLimit', 0.02, 'NumTiles', [8 8]);
-    imshow(greenChannelEqualized)
-    title('Immagine con CLAHE')
+    % Background subtraction in double 
+    green_double = im2double(greenChannelImg);
+    background = imgaussfilt(green_double, 50);
+    subtracted = green_double - background;
 
-    
+    % Rinormalizza in [0,1]
+    subtracted = subtracted - min(subtracted(:));
+    subtracted = subtracted / max(subtracted(:));
+
+    figure(3); imshow(subtracted); title('Dopo Background Subtraction')
+
+    % CLAHE — richiede uint8
+    subtracted_uint8 = im2uint8(subtracted);
+    greenChannelEqualized = adapthisteq(subtracted_uint8, ...
+        'ClipLimit', 0.02, 'NumTiles', [8 8]);
+    figure(4); imshow(greenChannelEqualized); title('Dopo CLAHE')
+
+    % Bilaterale + Opening
+    imgFilteredBilateral = imbilatfilt(im2double(greenChannelEqualized), ...
+        'DegreeOfSmoothing', 10, 'SpatialSigma', 2);
+    structure = strel('disk', 2);
+    imgOpen = imopen(imgFilteredBilateral, structure);
+    figure(5); imshow(imgOpen); title('Dopo Bilateral + Opening')
+
+    % Thresholding iterativo
+    T1 = 0.5 * mean(imgOpen(:));
+    done = false;
+    maxIter = 100;
+    iter = 0;
+
+    while ~done && iter < maxIter
+        g = imgOpen >= T1;
+        TNext = 0.5 * (mean(imgOpen(g)) + mean(imgOpen(~g)));
+        done = abs(T1 - TNext) < 1e-3;
+        T1 = TNext;
+        iter = iter + 1;
+    end
+
+    imgThreshSimple = imbinarize(imgOpen, TNext);
+    figure(6); imshow(imgThreshSimple); title('Segmentazione con Thresholding Iterativo')
 end
-
-%ESPERIMENTO, UTILIZZO DI THRESHOLDING INVECE DI THRESHOLDING ADATTIVO
-imgThreshSimple=im2double(greenChannelEqualized);
-T1=0.5*mean(imgThreshSimple(:));
-done=false;
-while ~ done
-    g=imgThreshSimple>=T1;
-    TNext=0.5*(mean(imgThreshSimple(g))+mean(imgThreshSimple(~g)));
-    done= abs(T1-TNext)<0.5;
-    T1=TNext;
-end 
-imgThreshSimple=imbinarize(imgThreshSimple,TNext);
-figure(6)
-imshow(imgThreshSimple)
-title('Immagine Segmentata con Tresholding')
