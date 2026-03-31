@@ -1,7 +1,7 @@
 folder = '.\IDRiD\A. Segmentation\1. Original Images\a. Training Set';
 files = dir(fullfile(folder, '*.jpg'));
-
-for k = 1:2
+%PROVA CON 5 IMMAGINI PER VALUTARE LE SEGMENTAZIONI
+for k = 1:5
     filename = fullfile(folder, files(k).name);
     startingImg = imread(filename);
 
@@ -47,7 +47,17 @@ for k = 1:2
         T1 = TNext;
         iter = iter + 1;
     end
+    
+    %STAMPO L'INDICE PER CAPIRE A CHE ITERAZIONE SIAMO
+    fprintf('Iterazione numero: %f\n', k)
 
     imgThreshSimple = imbinarize(imgOpen, TNext);
     figure(6); imshow(imgThreshSimple); title('Segmentazione con Thresholding Iterativo')
+    fprintf('Valore soglia metodo iterativo: %f\n', TNext)
+
+    %THRESHOLDING CON OTSU (METODO GENERALE)
+    tOtsu=graythresh(imgOpen);
+    imgOtsu=imbinarize(imgOpen, tOtsu);
+    figure(7); imshow(imgOtsu); title('Segmentazione con Thresholding OTSU')
+    fprintf('Valore soglia metodo OTSU: %f\n', tOtsu)
 end
