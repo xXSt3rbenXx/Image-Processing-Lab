@@ -22,14 +22,13 @@ for k = 1:2
 
     figure(3); imshow(subtracted); title('Dopo Background Subtraction')
 
-    % CLAHE — richiede uint8
-    subtracted_uint8 = im2uint8(subtracted);
-    greenChannelEqualized = adapthisteq(subtracted_uint8, ...
+    % CLAHE 
+    greenChannelEqualized = adapthisteq(subtracted, ...
         'ClipLimit', 0.02, 'NumTiles', [8 8]);
     figure(4); imshow(greenChannelEqualized); title('Dopo CLAHE')
 
     % Bilaterale + Opening
-    imgFilteredBilateral = imbilatfilt(im2double(greenChannelEqualized), ...
+    imgFilteredBilateral = imbilatfilt(greenChannelEqualized, ...
         'DegreeOfSmoothing', 10, 'SpatialSigma', 2);
     structure = strel('disk', 2);
     imgOpen = imopen(imgFilteredBilateral, structure);
