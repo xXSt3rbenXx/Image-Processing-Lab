@@ -11,7 +11,7 @@ folderSoftExudates   = fullfile('.\IDRiD\A. Segmentation\2. All Segmentation Gro
 folderOpticDisc      = fullfile('.\IDRiD\A. Segmentation\2. All Segmentation Groundtruths\a. Training Set\5. Optic Disc');
 
 % ===================== FILES =====================
-files = dir(fullfile(folderImg, '*.jpg'));
+files = dir(fullfile(folderImg, '*.jpg')); %Cerca solo file jpg
 
 filesMicroaneurysms = dir(fullfile(folderMicroaneurysms, '*.tif'));
 filesHaemorrhages   = dir(fullfile(folderHaemorrhages,   '*.tif'));
@@ -25,7 +25,7 @@ if isempty(files)
 end
 
 % ===================== NUMERO IMMAGINI =====================
-numImmagini = 2;
+numImmagini = 3;
 
 % ===================== PREPROCESSING =====================
 results = PreprocessingSegmentation(folderImg, numImmagini);
@@ -68,7 +68,8 @@ for k = 1:numImmagini
 
     % ===================== STAMPA =====================
     fprintf('\n=== %s ===\n', nomeBase);
-    fprintf('%-20s %-10s %-10s %-10s %-10s\n', 'Lesione', 'AccIt', 'DiceIt', 'AccOt', 'DiceOt');
+    fprintf('%-20s %-6s %-6s %-5s %-5s | %-6s %-6s %-5s %-5s\n', ...
+    'Lesione','AccIt','DiceIt','SensIt','SpecIt','AccOt','DiceOt','SensOt','SpecOt');
 
     printRow('Microaneurismi', m_MA);
     printRow('Emorragie',      m_HE);
@@ -100,11 +101,10 @@ end
 
 % ===================== FUNZIONI DI SUPPORTO =====================
 function printRow(name, m)
-    fprintf('%-20s %-10.2f %-10.2f %-10.2f %-10.2f\n', ...
+    fprintf('%-20s %6.2f %6.2f %5.2f %5.2f | %6.2f %6.2f %5.2f %5.2f\n', ...
         name, ...
-        m.iter.accuracy*100, m.iter.dice*100, ...
-        m.otsu.accuracy*100, m.otsu.dice*100);
-   
+        m.iter.accuracy*100, m.iter.dice*100, m.iter.sensitivity*100, m.iter.specificity*100, ...
+        m.otsu.accuracy*100, m.otsu.dice*100, m.otsu.sensitivity*100, m.otsu.specificity*100);
 end
 
 function label = makeLabel(m_MA, m_HE, m_EX, m_SE, m_OD, type)

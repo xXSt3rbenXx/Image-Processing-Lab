@@ -1,4 +1,4 @@
-function metrics = evaluationSegmentation(segmentedIter, segmentedOtsu, gt)
+function metrics = EvaluationSegmentation(segmentedIter, segmentedOtsu, gt)
 pred_iter=logical(segmentedIter);
 pred_otsu=logical(segmentedOtsu);
 gt=logical(gt);
@@ -26,4 +26,12 @@ metrics.otsu.accuracy=(TP_otsu+TN_otsu)/(TP_otsu+FN_otsu+FP_otsu+TN_otsu);
 
 metrics.iter.dice=(2*TP_iter)/(2*TP_iter+FP_iter+FN_iter+eps);
 metrics.otsu.dice=(2*TP_otsu)/(2*TP_otsu+FP_otsu+FN_otsu+eps);
+
+% Sensibilità (quante lesioni reali trova)
+metrics.iter.sensitivity = TP_iter / (TP_iter + FN_iter + eps);
+metrics.otsu.sensitivity = TP_otsu / (TP_otsu + FN_otsu + eps);
+
+% Specificità (quanti pixel sani classifica correttamente)
+metrics.iter.specificity = TN_iter / (TN_iter + FP_iter + eps);
+metrics.otsu.specificity = TN_otsu / (TN_otsu + FP_otsu + eps);
 end

@@ -3,7 +3,7 @@ files = dir(fullfile(folder, '*.jpg'));
 
 results = cell(numImages,3); %CREO UN VETTORE IN QUESTO HA 5 CELLE PERCHÈ STIAMO CARICANDO 5 IMMAGINI
     for k = 1:numImages
-        filename = fullfile(folder, files(k).name);
+        filename = fullfile(folder, files(k).name); %costruisce il percorso assoluto del file
         startingImg = imread(filename);
     
         % Canale verde
@@ -42,11 +42,24 @@ results = cell(numImages,3); %CREO UN VETTORE IN QUESTO HA 5 CELLE PERCHÈ STIAM
         end
     
         imgThresh = imbinarize(imgOpen, TNext);
+
+
+        
         
         %thresholding con otsu
         tOtsu=graythresh(imgOpen);
         imgOtsu=imbinarize(imgOpen, tOtsu);
         
+        %ESPERIMENTO Rimuovi oggetti troppo grandi (non sono lesioni) con
+        %un filtro per dimensioni
+        % Per iterativo — lesioni più grandi
+        imgThresh = bwareafilt(imgThresh, [5 2000]);
+        
+        % Per Otsu — il problema è diverso, ha troppi FP grandi
+        imgOtsu = bwareafilt(imgOtsu, [5 1000]);
+
+
+
         % Il risultato viene salvato su due celle differenti
         
         results{k, 1} = imgThresh; % Colonna 1: Iterativo
