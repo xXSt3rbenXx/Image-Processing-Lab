@@ -34,7 +34,12 @@ end
 numImmagini = 5;
 results = PreprocessingSegmentation(folderImg, numImmagini);
 
+%PLOT DELL'IMMAGINE DI PARTEN
+startingImg = results{k, 3};
 
+subplot(2,4,8);
+imshow(startingImg);
+title(['Originale: ', files(k).name], 'FontSize', 8);
 
 for k = 1:numImmagini
     % Per sicurezza, cerchiamo il file GT che ha lo stesso nome del file originale
@@ -69,54 +74,44 @@ for k = 1:numImmagini
         groundTruthSoftExudates  = imread(gtPathSoftExudates)   > 0;
         groundTruthOpticDisc     = imread(gtPathOpticDisc)      > 0;
 
-        % Recupero le due segmentazioni dalla cella Nx3
-        startingImg = results{k, 3};
+        % Recupero le due segmentazioni dalla cella Nx2
         segmentedIter = results{k, 1};
         segmentedOtsu = results{k, 2};
 
-        %Mostra solo l'immagine 3
-        %fprintf('Immagine %d - size startingImg: %dx%dx%d\n', k, size(results{k,3},1), size(results{k,3},2), size(results{k,3},3));
-        figure(k);
-        sgtitle(['Test: ', nomeBase]);
-        %PLOT DELL'IMMAGINE DI PARTENZA
-        
-        
-        subplot(2,4,1);
-        imshow(startingImg);
-        title(['Originale: ', files(k).name], 'FontSize', 8);
+        figure('Name', ['Test: ', nomeBase], 'NumberTitle', 'off');
 
         % STAMPIAMO IMMAGINE SEGMENTATA ITERATIVA
-        subplot(2,4,2);
+        subplot(2,4,1);
         imshow(segmentedIter);
         title(['ITERATIVA: ', files(k).name], 'FontSize', 8);
 
         % STAMPIAMO IMMAGINE SEGMENTATA OTSU
-        subplot(2,4,3);
+        subplot(2,4,2);
         imshow(segmentedOtsu);
         title(['OTSU: ', files(k).name], 'FontSize', 8);
 
         % STAMPIAMO TIPO LESIONE SEGMENTATA MICROANEURISMO
-        subplot(2,4,4);
+        subplot(2,4,3);
         imshow(groundTruthMicroaneurysm, []);
         title(['GT: ', filesMicroaneurysms(indexMicroaneurysm).name], 'FontSize', 8);
 
         % STAMPIAMO TIPO LESIONE SEGMENTATA EMORRAGIE
-        subplot(2,4,5);
+        subplot(2,4,4);
         imshow(groundTruthHaemorrhages, []);
         title(['GT: ', filesHaemorrhages(indexHaemorrhages).name], 'FontSize', 8);
 
         % STAMPIAMO TIPO LESIONE SEGMENTATA HARD EXUDATES
-        subplot(2,4,6);
+        subplot(2,4,5);
         imshow(groundTruthHardExudates, []);
         title(['GT: ', filesHardExudates(indexHardExudates).name], 'FontSize', 8);
 
         % STAMPIAMO TIPO LESIONE SEGMENTATA SOFT EXUDATES
-        subplot(2,4,7);
+        subplot(2,4,6);
         imshow(groundTruthSoftExudates, []);
         title(['GT: ', filesSoftExudates(indexSoftExudates).name], 'FontSize', 8);
 
         % STAMPIAMO TIPO LESIONE SEGMENTATA OPTIC DISC
-        subplot(2,4,8); 
+        subplot(2,4,7); 
         imshow(groundTruthOpticDisc, []);
         title(['GT: ', filesOpticDisc(indexOpticDisc).name], 'FontSize', 8);
 

@@ -1,7 +1,7 @@
 function results = PreprocessingSegmentation(folder,numImages)
 files = dir(fullfile(folder, '*.jpg'));
 
-results = cell(numImages,3); %CREO UN VETTORE IN QUESTO HA 5 CELLE PERCHÈ STIAMO CARICANDO 5 IMMAGINI
+results = cell(numImages,2); %CREO UN VETTORE IN QUESTO HA 5 CELLE PERCHÈ STIAMO CARICANDO 5 IMMAGINI
     for k = 1:numImages
         filename = fullfile(folder, files(k).name);
         startingImg = imread(filename);
@@ -51,6 +51,5 @@ results = cell(numImages,3); %CREO UN VETTORE IN QUESTO HA 5 CELLE PERCHÈ STIAM
         
         results{k, 1} = imgThresh; % Colonna 1: Iterativo
         results{k, 2} = imgOtsu;   % Colonna 2: Otsu
-        results{k, 3} = startingImg; %Ho inserito una nuova cella per ospitare l'immagine di partenza, proveniente da questa funzione
     end
 end
