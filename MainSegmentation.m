@@ -12,7 +12,7 @@ folderImg = '.\IDRiD\A. Segmentation\1. Original Images\a. Training Set';
 folderMicroaneurysms = fullfile('.\IDRiD\A. Segmentation\2. All Segmentation Groundtruths\a. Training Set\1. Microaneurysms');
 folderHaemorrhages   = fullfile('.\IDRiD\A. Segmentation\2. All Segmentation Groundtruths\a. Training Set\2. Haemorrhages');
 folderHardExudates   = fullfile('.\IDRiD\A. Segmentation\2. All Segmentation Groundtruths\a. Training Set\3. Hard Exudates');
-%folderSoftExudates   = fullfile('.\IDRiD\A. Segmentation\2. All Segmentation Groundtruths\a. Training Set\4. Soft Exudates');
+folderSoftExudates   = fullfile('.\IDRiD\A. Segmentation\2. All Segmentation Groundtruths\a. Training Set\4. Soft Exudates');
 folderOpticDisc      = fullfile('.\IDRiD\A. Segmentation\2. All Segmentation Groundtruths\a. Training Set\5. Optic Disc');
 
 % Caricamento liste
@@ -21,10 +21,11 @@ filesMicroaneurysms = dir(fullfile(folderMicroaneurysms, '*.tif')); % QUI LAVORI
 filesHaemorrahages  = dir(fullfile(folderHaemorrhages,   '*.tif')); % QUI LAVORIAMO DENTRO LA SOTTOCARTELLA HAEMORRHAGES
 filesHardExudates   = dir(fullfile(folderHardExudates,   '*.tif')); % QUI LAVORIAMO DENTRO LA SOTTOCARTELLA HARD EXUDATES
 %filesSoftExudates   = dir(fullfile(folderSoftExudates,   '*.tif')); % QUI LAVORIAMO DENTRO LA SOTTOCARTELLA SOFT EXUDATES
+filesSoftExudates = [dir(fullfile(folderSoftExudates, '*.tif')); dir(fullfile(folderSoftExudates, '*.tiff'))]; %QUI è NECESSARIO POICHè ABBIAMO LE IMMAGINI NERE CHE SONO IN FORMATO .TIFF INVECE CHE .TIF
 filesOpticDisc      = dir(fullfile(folderOpticDisc,      '*.tif')); % QUI LAVORIAMO DENTRO LA SOTTOCARTELLA OPTIC DISC
 
 if isempty(filesHaemorrahages) || isempty(filesMicroaneurysms) || ...
-   isempty(filesHardExudates)  || isempty(filesOpticDisc) %%VA AGGIUNTO SOFT EXUDATES
+   isempty(filesHardExudates)  || isempty(filesOpticDisc) || isempty(filesSoftExudates)
     error('Cartella non trovata o vuota');
 end
 
@@ -45,25 +46,25 @@ for k = 1:numImmagini
     % Cerchiamo nella lista filesHardExudates il file che contiene "IDRiD_01"
     indexHardExudates  = find(contains({filesHardExudates.name},   nomeBase));
     % Cerchiamo nella lista filesSoftExudates il file che contiene "IDRiD_01"
-    %indexSoftExudates  = find(contains({filesSoftExudates.name},   nomeBase));
+    indexSoftExudates  = find(contains({filesSoftExudates.name},   nomeBase));
     % Cerchiamo nella lista filesOpticDisc il file che contiene "IDRiD_01"
     indexOpticDisc     = find(contains({filesOpticDisc.name},      nomeBase));
 
     if ~isempty(indexMicroaneurysm) && ~isempty(indexHaemorrhages) && ...
-       ~isempty(indexHardExudates)  && ~isempty(indexOpticDisc) %%VA AGGIUNTO SOFT EXUDATES
+       ~isempty(indexHardExudates)  && ~isempty(indexOpticDisc) && ~isempty(indexSoftExudates)
 
         % Path GT
         gtPathMicroaneurysms = fullfile(filesMicroaneurysms(indexMicroaneurysm).folder, filesMicroaneurysms(indexMicroaneurysm).name);
         gtPathHaemorrhages   = fullfile(filesHaemorrahages(indexHaemorrhages).folder,   filesHaemorrahages(indexHaemorrhages).name);
         gtPathHardExudates   = fullfile(filesHardExudates(indexHardExudates).folder,    filesHardExudates(indexHardExudates).name);
-        %gtPathSoftExudates   = fullfile(filesSoftExudates(indexSoftExudates).folder,    filesSoftExudates(indexSoftExudates).name);
+        gtPathSoftExudates   = fullfile(filesSoftExudates(indexSoftExudates).folder,    filesSoftExudates(indexSoftExudates).name);
         gtPathOpticDisc      = fullfile(filesOpticDisc(indexOpticDisc).folder,          filesOpticDisc(indexOpticDisc).name);
 
         % Lettura GT e binarizzazione
         groundTruthMicroaneurysm = imread(gtPathMicroaneurysms) > 0;
         groundTruthHaemorrhages  = imread(gtPathHaemorrhages)   > 0;
         groundTruthHardExudates  = imread(gtPathHardExudates)   > 0;
-        %groundTruthSoftExudates  = imread(gtPathSoftExudates)   > 0;
+        groundTruthSoftExudates  = imread(gtPathSoftExudates)   > 0;
         groundTruthOpticDisc     = imread(gtPathOpticDisc)      > 0;
 
         % Recupero le due segmentazioni dalla cella Nx2
@@ -98,12 +99,12 @@ for k = 1:numImmagini
         title(['GT: ', filesHardExudates(indexHardExudates).name], 'FontSize', 8);
 
         % STAMPIAMO TIPO LESIONE SEGMENTATA SOFT EXUDATES
-        %subplot(2,4,6);
-        %imshow(groundTruthSoftExudates, []);
-        %title(['GT: ', filesSoftExudates(indexSoftExudates).name], 'FontSize', 8);
+        subplot(2,4,6);
+        imshow(groundTruthSoftExudates, []);
+        title(['GT: ', filesSoftExudates(indexSoftExudates).name], 'FontSize', 8);
 
         % STAMPIAMO TIPO LESIONE SEGMENTATA OPTIC DISC
-        subplot(2,4,6); %%VA CAMBIATO IN 7 PERCHè MANCANO I SOFT EXUDATES
+        subplot(2,4,7); 
         imshow(groundTruthOpticDisc, []);
         title(['GT: ', filesOpticDisc(indexOpticDisc).name], 'FontSize', 8);
 
