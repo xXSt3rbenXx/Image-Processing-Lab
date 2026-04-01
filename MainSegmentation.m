@@ -74,10 +74,9 @@ for k = 1:numImmagini
         segmentedIter = results{k, 1};
         segmentedOtsu = results{k, 2};
 
-        %Mostra solo l'immagine 3
-        %fprintf('Immagine %d - size startingImg: %dx%dx%d\n', k, size(results{k,3},1), size(results{k,3},2), size(results{k,3},3));
+        %Mostra solo l'immagine 3 perchè ha un ground trouth corrispondente
         figure(k);
-        sgtitle(['Test: ', nomeBase]);
+        set(k, 'Name', ['Test: ', nomeBase], 'NumberTitle', 'off');
         %PLOT DELL'IMMAGINE DI PARTENZA
         
         
