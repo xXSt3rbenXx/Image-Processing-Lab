@@ -39,6 +39,7 @@ end
 
 % Funzione di supporto condivisa per entrambe le segmentazioni
 function ma_binary = filterMA(ma_binary)
+
 % Calcola le proprietà delle regioni connesse
     props = regionprops(ma_binary, 'Eccentricity');
    if ~isempty(props)
