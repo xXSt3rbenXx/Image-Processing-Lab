@@ -94,7 +94,7 @@ for k = 1:numImmagini
     % ===================== STAMPA =====================
     fprintf('\n=== %s ===\n', nomeBase);
     fprintf('%-20s %-6s %-6s %-5s %-5s | %-6s %-6s %-5s %-5s\n', ...
-    'Lesione','AccIt','DiceIt','SensIt','SpecIt','AccOt','DiceOt','SensOt','SpecOt');
+    'Lesione','AccAdpt','DiceAdpt','SensAdpt','SpecAdpt','AccOt','DiceOt','SensOt','SpecOt');
 
     printRow('Microaneurismi', m_MA);
     printRow('Emorragie',      m_HE);

@@ -10,26 +10,10 @@ function result= PreprocessingOpticDisc(folder,numImages)
                % CLAHE
        greenChannelEqualized = adapthisteq(greenChannelImg, ...
            'ClipLimit', 0.02, 'NumTiles', [8 8]);
-            % Essendo le parti più brillanti, usiamo una soglia superiore alla media
-       
-            %CALCOLO SOGLIA ADATTIVA PER METODO ITERATIVO
-            % Threshold iterativo
-            T1 = 0.5 * mean(greenChannelEqualized(:));
-            done = false;
-            maxIter = 100; iter = 0;
-        
-            while ~done && iter < maxIter
-                g = greenChannelEqualized >= T1;
-                TNext = 0.5 * (mean(greenChannelEqualized(g)) + mean(greenChannelEqualized(~g)));
-                done = abs(T1 - TNext) < 1e-3;
-                T1 = TNext;
-                iter=iter+1;
-            end
-    
-        level_iter = imbinarize(greenChannelEqualized, TNext);
+
 
        % level = graythresh(greenChannelEqualized) * 2.0; %PROVIAMO CON UNA SOGLIA ANCORAPIù ALTA
-       %level_iter = prctile(greenChannelEqualized(:), 98);%uso il percentile per i più brillanti 
+       level_iter = prctile(greenChannelEqualized(:), 98);%uso il percentile per i più brillanti 
        mask_iter = greenChannelEqualized > level_iter;
 
                 % Rimuoviamo oggetti troppo piccoli (rumore) che non possono essere essudati
