@@ -49,7 +49,7 @@ for k = 1:numImmagini
 
     % ===================== CARICAMENTO GT =====================
     gt_MA = imread(fullfile(filesMicroaneurysms(idxMA).folder, filesMicroaneurysms(idxMA).name)) > 0;
-    if size(gt_OD, 3)==3
+    if size(gt_MA, 3)==3
         gt_MA=rgb2gray(gt_MA)>0;
     else
         gt_MA=gt_MA>0;

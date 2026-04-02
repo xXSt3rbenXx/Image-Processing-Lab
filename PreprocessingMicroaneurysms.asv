@@ -26,24 +26,6 @@ results = cell(numImages,2); %CREO UN VETTORE IN QUESTO HA 5 CELLE PERCHÈ STIAM
         blackTopHat = imbothat(green_ma_clahe, se_tophat);
 
 
-         % Soglia adattiva sulla risposta del top-hat
-        ma_binary = imbinarize(blackTopHat, 'adaptive', ...
-            'Sensitivity', 0.3, 'ForegroundPolarity', 'bright');
-    
-        % Filtra per dimensione: MA tipici sono 3-60 pixel
-        ma_binary = bwareaopen(ma_binary, 3);
-        ma_binary = bwareafilt(ma_binary, [3 60]);
-    
-        % Filtra per circolarità: i vasi sono allungati, i MA sono rotondi
-        props = regionprops(ma_binary, 'Eccentricity');
-        eccentricities = [props.Eccentricity];
-        labels = bwlabel(ma_binary);
-        for i = 1:length(props)
-            if eccentricities(i) > 0.85  % rimuovi oggetti troppo allungati
-                ma_binary(labels == i) = 0;
-            end
-        end
-
     
        
 
@@ -52,7 +34,5 @@ results = cell(numImages,2); %CREO UN VETTORE IN QUESTO HA 5 CELLE PERCHÈ STIAM
         
         
         results{k, 1} = startingImg; %Ho inserito una nuova cella per ospitare l'immagine di partenza, proveniente da questa funzione
-        results{k,2}=ma_binary;
-    
     end
 end
