@@ -1,123 +1,137 @@
-close all; clc; % Pulizia iniziale per non duplicare finestre
 
-% 1. Scegli quale sottocartella analizzare (Cambia il nome qui sotto)
-% Esempi: '1. Microaneurysms', '2. Haemorrhages', '3. Hard Exudates', '4.
-% Soft Exudates', '5. Optic Disc'
+close all; clc;
 
+% ===================== PATH =====================
 folderImg = '.\IDRiD\A. Segmentation\1. Original Images\a. Training Set';
 
-% FOLDER RELATIVO AL TIPO DI LESIONE (VOLENDO POTREMMO ANCHE FARE 5 FILE
-% DIVERSI OPPURE FAR ESPLODERE QUESTO STAMPANDO OGNI VOLTA TUTTI I CASI
-% POSSIBILI)
 folderMicroaneurysms = fullfile('.\IDRiD\A. Segmentation\2. All Segmentation Groundtruths\a. Training Set\1. Microaneurysms');
 folderHaemorrhages   = fullfile('.\IDRiD\A. Segmentation\2. All Segmentation Groundtruths\a. Training Set\2. Haemorrhages');
 folderHardExudates   = fullfile('.\IDRiD\A. Segmentation\2. All Segmentation Groundtruths\a. Training Set\3. Hard Exudates');
 folderSoftExudates   = fullfile('.\IDRiD\A. Segmentation\2. All Segmentation Groundtruths\a. Training Set\4. Soft Exudates');
 folderOpticDisc      = fullfile('.\IDRiD\A. Segmentation\2. All Segmentation Groundtruths\a. Training Set\5. Optic Disc');
 
-% Caricamento liste
-files               = dir(fullfile(folderImg, '*.jpg'));
-filesMicroaneurysms = dir(fullfile(folderMicroaneurysms, '*.tif')); % QUI LAVORIAMO DENTRO LA SOTTOCARTELLA MICROANEURYSM
-filesHaemorrhages  = dir(fullfile(folderHaemorrhages,   '*.tif')); % QUI LAVORIAMO DENTRO LA SOTTOCARTELLA HAEMORRHAGES
-filesHardExudates   = dir(fullfile(folderHardExudates,   '*.tif')); % QUI LAVORIAMO DENTRO LA SOTTOCARTELLA HARD EXUDATES
-%filesSoftExudates   = dir(fullfile(folderSoftExudates,   '*.tif')); % QUI LAVORIAMO DENTRO LA SOTTOCARTELLA SOFT EXUDATES
-filesSoftExudates = [dir(fullfile(folderSoftExudates, '*.tif')); dir(fullfile(folderSoftExudates, '*.tiff'))]; %QUI è NECESSARIO POICHè ABBIAMO LE IMMAGINI NERE CHE SONO IN FORMATO .TIFF INVECE CHE .TIF
-filesOpticDisc      = dir(fullfile(folderOpticDisc,      '*.tif')); % QUI LAVORIAMO DENTRO LA SOTTOCARTELLA OPTIC DISC
+% ===================== FILES =====================
+files = dir(fullfile(folderImg, '*.jpg')); %Cerca solo file jpg
 
-if isempty(filesHaemorrhages) || isempty(filesMicroaneurysms) || ...
-   isempty(filesHardExudates)  || isempty(filesOpticDisc) || isempty(filesSoftExudates)
-    error('Cartella non trovata o vuota');
+filesMicroaneurysms = dir(fullfile(folderMicroaneurysms, '*.tif'));
+filesHaemorrhages   = dir(fullfile(folderHaemorrhages,   '*.tif'));
+filesHardExudates   = dir(fullfile(folderHardExudates,   '*.tif'));
+filesSoftExudates   = [dir(fullfile(folderSoftExudates, '*.tif')); dir(fullfile(folderSoftExudates, '*.tiff'))];
+filesOpticDisc      = dir(fullfile(folderOpticDisc,      '*.tif'));
+
+% ===================== CHECK =====================
+if isempty(files)
+    error('Cartella immagini vuota');
 end
 
-% APPLICO IL PREPROCESSING AD UN NUMERO DI IMMAGINI A NOSTRA SCELTA
-%  results = cell(1,5); DEVONO ESSERE UGUALI!!
-numImmagini = 5;
+% ===================== NUMERO IMMAGINI =====================
+numImmagini = 3;
+
+% ===================== PREPROCESSING =====================
 results = PreprocessingSegmentation(folderImg, numImmagini);
-
-%PLOT DELL'IMMAGINE DI PARTEN
-startingImg = results{k, 3};
-
-subplot(2,4,8);
-imshow(startingImg);
-title(['Originale: ', files(k).name], 'FontSize', 8);
-
+resultsOD = PreprocessingOpticDisc(folderImg, numImmagini);
+% ===================== LOOP =====================
 for k = 1:numImmagini
-    % Per sicurezza, cerchiamo il file GT che ha lo stesso nome del file originale
-    % Esempio: IDRiD_01.jpg -> cerchiamo IDRiD_01_MA.tif (o simile)
-    nomeBase = files(k).name(1:8); % Prende "IDRiD_01"
 
-    % Cerchiamo nella lista filesMicroaneurysms il file che contiene "IDRiD_01"
-    indexMicroaneurysm = find(contains({filesMicroaneurysms.name}, nomeBase));
-    % Cerchiamo nella lista filesHaemorrahages il file che contiene "IDRiD_01"
-    indexHaemorrhages  = find(contains({filesHaemorrhages.name},  nomeBase));
-    % Cerchiamo nella lista filesHardExudates il file che contiene "IDRiD_01"
-    indexHardExudates  = find(contains({filesHardExudates.name},   nomeBase));
-    % Cerchiamo nella lista filesSoftExudates il file che contiene "IDRiD_01"
-    indexSoftExudates  = find(contains({filesSoftExudates.name},   nomeBase));
-    % Cerchiamo nella lista filesOpticDisc il file che contiene "IDRiD_01"
-    indexOpticDisc     = find(contains({filesOpticDisc.name},      nomeBase));
+    nomeBase = files(k).name(1:8);
 
-    if ~isempty(indexMicroaneurysm) && ~isempty(indexHaemorrhages) && ...
-       ~isempty(indexHardExudates)  && ~isempty(indexOpticDisc) && ~isempty(indexSoftExudates)
+    % Trova indici GT
+    idxMA = find(contains({filesMicroaneurysms.name}, nomeBase));
+    idxHE = find(contains({filesHaemorrhages.name},  nomeBase));
+    idxEX = find(contains({filesHardExudates.name},  nomeBase));
+    idxSE = find(contains({filesSoftExudates.name},  nomeBase));
+    idxOD = find(contains({filesOpticDisc.name},     nomeBase));
 
-        % Path GT
-        gtPathMicroaneurysms = fullfile(filesMicroaneurysms(indexMicroaneurysm).folder, filesMicroaneurysms(indexMicroaneurysm).name);
-        gtPathHaemorrhages   = fullfile(filesHaemorrhages(indexHaemorrhages).folder,    filesHaemorrhages(indexHaemorrhages).name);
-        gtPathHardExudates   = fullfile(filesHardExudates(indexHardExudates).folder,    filesHardExudates(indexHardExudates).name);
-        gtPathSoftExudates   = fullfile(filesSoftExudates(indexSoftExudates).folder,    filesSoftExudates(indexSoftExudates).name);
-        gtPathOpticDisc      = fullfile(filesOpticDisc(indexOpticDisc).folder,          filesOpticDisc(indexOpticDisc).name);
-
-        % Lettura GT e binarizzazione
-        groundTruthMicroaneurysm = imread(gtPathMicroaneurysms) > 0;
-        groundTruthHaemorrhages  = imread(gtPathHaemorrhages)   > 0;
-        groundTruthHardExudates  = imread(gtPathHardExudates)   > 0;
-        groundTruthSoftExudates  = imread(gtPathSoftExudates)   > 0;
-        groundTruthOpticDisc     = imread(gtPathOpticDisc)      > 0;
-
-        % Recupero le due segmentazioni dalla cella Nx2
-        segmentedIter = results{k, 1};
-        segmentedOtsu = results{k, 2};
-
-        figure('Name', ['Test: ', nomeBase], 'NumberTitle', 'off');
-
-        % STAMPIAMO IMMAGINE SEGMENTATA ITERATIVA
-        subplot(2,4,1);
-        imshow(segmentedIter);
-        title(['ITERATIVA: ', files(k).name], 'FontSize', 8);
-
-        % STAMPIAMO IMMAGINE SEGMENTATA OTSU
-        subplot(2,4,2);
-        imshow(segmentedOtsu);
-        title(['OTSU: ', files(k).name], 'FontSize', 8);
-
-        % STAMPIAMO TIPO LESIONE SEGMENTATA MICROANEURISMO
-        subplot(2,4,3);
-        imshow(groundTruthMicroaneurysm, []);
-        title(['GT: ', filesMicroaneurysms(indexMicroaneurysm).name], 'FontSize', 8);
-
-        % STAMPIAMO TIPO LESIONE SEGMENTATA EMORRAGIE
-        subplot(2,4,4);
-        imshow(groundTruthHaemorrhages, []);
-        title(['GT: ', filesHaemorrhages(indexHaemorrhages).name], 'FontSize', 8);
-
-        % STAMPIAMO TIPO LESIONE SEGMENTATA HARD EXUDATES
-        subplot(2,4,5);
-        imshow(groundTruthHardExudates, []);
-        title(['GT: ', filesHardExudates(indexHardExudates).name], 'FontSize', 8);
-
-        % STAMPIAMO TIPO LESIONE SEGMENTATA SOFT EXUDATES
-        subplot(2,4,6);
-        imshow(groundTruthSoftExudates, []);
-        title(['GT: ', filesSoftExudates(indexSoftExudates).name], 'FontSize', 8);
-
-        % STAMPIAMO TIPO LESIONE SEGMENTATA OPTIC DISC
-        subplot(2,4,7); 
-        imshow(groundTruthOpticDisc, []);
-        title(['GT: ', filesOpticDisc(indexOpticDisc).name], 'FontSize', 8);
-
-        drawnow;
-
-    else
-        fprintf('GT non trovata per %s\n', nomeBase);
+    if isempty(idxMA) || isempty(idxHE) || isempty(idxEX) || isempty(idxSE) || isempty(idxOD)
+        fprintf('Errore: GT mancante per %s\n', nomeBase);
+        continue;
     end
+
+    % ===================== CARICAMENTO GT =====================
+    gt_MA = imread(fullfile(filesMicroaneurysms(idxMA).folder, filesMicroaneurysms(idxMA).name)) > 0;
+    gt_HE = imread(fullfile(filesHaemorrhages(idxHE).folder,   filesHaemorrhages(idxHE).name))   > 0;
+    gt_EX = imread(fullfile(filesHardExudates(idxEX).folder,   filesHardExudates(idxEX).name))   > 0;
+    gt_SE = imread(fullfile(filesSoftExudates(idxSE).folder,   filesSoftExudates(idxSE).name))   > 0;
+    gt_OD = imread(fullfile(filesOpticDisc(idxOD).folder,      filesOpticDisc(idxOD).name))      > 0;
+    if size(gt_OD, 3)==3
+        gt_OD=rgb2gray(gt_OD)>0;
+    else
+        gt_OD=gt_OD>0;
+    end
+    % ===================== RISULTATI =====================
+    startingImg   = results{k, 3};
+    segmentedIter = logical(results{k, 1});
+    segmentedOtsu = logical(results{k, 2});
+
+    
+
+    % ===================== METRICHE =====================
+    m_MA = EvaluationSegmentation(segmentedIter, segmentedOtsu, gt_MA);
+    m_HE = EvaluationSegmentation(segmentedIter, segmentedOtsu, gt_HE);
+    m_EX = EvaluationSegmentation(segmentedIter, segmentedOtsu, gt_EX);
+    m_SE = EvaluationSegmentation(segmentedIter, segmentedOtsu, gt_SE);
+    m_OD = EvaluationSegmentation(resultsOD{k, 1}, resultsOD{k, 2}, gt_OD);
+
+    % ===================== STAMPA =====================
+    fprintf('\n=== %s ===\n', nomeBase);
+    fprintf('%-20s %-6s %-6s %-5s %-5s | %-6s %-6s %-5s %-5s\n', ...
+    'Lesione','AccIt','DiceIt','SensIt','SpecIt','AccOt','DiceOt','SensOt','SpecOt');
+
+    printRow('Microaneurismi', m_MA);
+    printRow('Emorragie',      m_HE);
+    printRow('Essudati Duri',  m_EX);
+    printRow('Essudati Deboli',m_SE);
+    printRow('Disco Ottico',   m_OD);
+
+    % ===================== FIGURA =====================
+    figure(k); clf;
+    set(gcf, 'Name', ['Test: ', nomeBase], 'NumberTitle', 'off');
+
+    subplot(2,4,1); imshow(startingImg); title('Originale');
+
+    subplot(2,4,2); imshow(segmentedIter);
+    title('Iterativa');
+    xlabel(makeLabel(m_MA, m_HE, m_EX, m_SE, m_OD, 'iter'), 'FontSize', 8);
+
+    subplot(2,4,3); imshow(segmentedOtsu);
+    title('Otsu');
+    xlabel(makeLabel(m_MA, m_HE, m_EX, m_SE, m_OD, 'otsu'), 'FontSize', 8);
+
+    subplot(2,4,4); imshow(gt_MA); title('Microaneurismi');
+    subplot(2,4,5); imshow(gt_HE); title('Emorragie');
+    subplot(2,4,6); imshow(gt_EX); title('Hard Exudates');
+    subplot(2,4,7); imshow(gt_SE); title('Soft Exudates');
+    subplot(2,4,8); imshow(gt_OD); title('Optic Disc');
+
+end
+
+% ===================== FUNZIONI DI SUPPORTO =====================
+function printRow(name, m)
+    fprintf('%-20s %6.2f %6.2f %5.2f %5.2f | %6.2f %6.2f %5.2f %5.2f\n', ...
+        name, ...
+        m.iter.accuracy*100, m.iter.dice*100, m.iter.sensitivity*100, m.iter.specificity*100, ...
+        m.otsu.accuracy*100, m.otsu.dice*100, m.otsu.sensitivity*100, m.otsu.specificity*100);
+end
+
+function label = makeLabel(m_MA, m_HE, m_EX, m_SE, m_OD, type)
+
+    if strcmp(type,'iter')
+        label = {
+        sprintf('MA A=%.1f D=%.1f', m_MA.iter.accuracy*100, m_MA.iter.dice*100)
+        sprintf('HE A=%.1f D=%.1f', m_HE.iter.accuracy*100, m_HE.iter.dice*100)
+        sprintf('EX A=%.1f D=%.1f', m_EX.iter.accuracy*100, m_EX.iter.dice*100)
+        sprintf('SE A=%.1f D=%.1f', m_SE.iter.accuracy*100, m_SE.iter.dice*100)
+        sprintf('OD A=%.1f D=%.1f', m_OD.iter.accuracy*100, m_OD.iter.dice*100)
+        };
+    else
+        label = {
+        sprintf('MA A=%.1f D=%.1f', m_MA.otsu.accuracy*100, m_MA.otsu.dice*100)
+        sprintf('HE A=%.1f D=%.1f', m_HE.otsu.accuracy*100, m_HE.otsu.dice*100)
+        sprintf('EX A=%.1f D=%.1f', m_EX.otsu.accuracy*100, m_EX.otsu.dice*100)
+        sprintf('SE A=%.1f D=%.1f', m_SE.otsu.accuracy*100, m_SE.otsu.dice*100)
+        sprintf('OD A=%.1f D=%.1f', m_OD.otsu.accuracy*100, m_OD.otsu.dice*100)
+        };
+    end
+
+
 end

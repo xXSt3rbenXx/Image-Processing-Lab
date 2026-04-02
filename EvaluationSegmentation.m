@@ -1,10 +1,27 @@
 function metrics = EvaluationSegmentation(segmentedIter, segmentedOtsu, gt)
+
+
+%FORZIAMO TUTTO IN UN CANALE BINARIO
+if size(segmentedIter, 3) == 3
+    segmentedIter = rgb2gray(segmentedIter);
+end
+if size(segmentedOtsu, 3) == 3
+    segmentedOtsu = rgb2gray(segmentedOtsu);
+end
+if size(gt, 3) == 3
+    gt = rgb2gray(gt);
+end
+
+
 pred_iter=logical(segmentedIter);
 pred_otsu=logical(segmentedOtsu);
 gt=logical(gt);
 %converte valori numerici in array logici (booleani), 
 % dove i valori diversi da zero diventano true () e
 %  gli zeri diventano false ()
+
+
+
 
 %CALCOLO TN, TP, FP, FN
 TP_iter = sum(pred_iter(:) & gt(:));

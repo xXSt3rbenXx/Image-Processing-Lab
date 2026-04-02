@@ -29,7 +29,7 @@ numImmagini = 3;
 
 % ===================== PREPROCESSING =====================
 results = PreprocessingSegmentation(folderImg, numImmagini);
-
+resultsOD = PreprocessingOpticDisc(folderImg, numImmagini);
 % ===================== LOOP =====================
 for k = 1:numImmagini
 
@@ -49,10 +49,35 @@ for k = 1:numImmagini
 
     % ===================== CARICAMENTO GT =====================
     gt_MA = imread(fullfile(filesMicroaneurysms(idxMA).folder, filesMicroaneurysms(idxMA).name)) > 0;
+    if size(gt_OD, 3)==3
+        gt_MA=rgb2gray(gt_MA)>0;
+    else
+        gt_MA=gt_MA>0;
+    end
     gt_HE = imread(fullfile(filesHaemorrhages(idxHE).folder,   filesHaemorrhages(idxHE).name))   > 0;
+    if size(gt_HE, 3)==3
+        gt_HE=rgb2gray(gt_HE)>0;
+    else
+        gt_HE=gt_HE>0;
+    end    
     gt_EX = imread(fullfile(filesHardExudates(idxEX).folder,   filesHardExudates(idxEX).name))   > 0;
+    if size(gt_EX, 3)==3
+        gt_EX=rgb2gray(gt_EX)>0;
+    else
+        gt_EX=gt_EX>0;
+    end     
     gt_SE = imread(fullfile(filesSoftExudates(idxSE).folder,   filesSoftExudates(idxSE).name))   > 0;
+    if size(gt_SE, 3)==3
+        gt_SE=rgb2gray(gt_SE)>0;
+    else
+        gt_SE=gt_SE>0;
+    end       
     gt_OD = imread(fullfile(filesOpticDisc(idxOD).folder,      filesOpticDisc(idxOD).name))      > 0;
+    if size(gt_OD, 3)==3
+        gt_OD=rgb2gray(gt_OD)>0;
+    else
+        gt_OD=gt_OD>0;
+    end
 
     % ===================== RISULTATI =====================
     startingImg   = results{k, 3};
@@ -64,7 +89,7 @@ for k = 1:numImmagini
     m_HE = EvaluationSegmentation(segmentedIter, segmentedOtsu, gt_HE);
     m_EX = EvaluationSegmentation(segmentedIter, segmentedOtsu, gt_EX);
     m_SE = EvaluationSegmentation(segmentedIter, segmentedOtsu, gt_SE);
-    m_OD = EvaluationSegmentation(segmentedIter, segmentedOtsu, gt_OD);
+    m_OD = EvaluationSegmentation(resultsOD{k, 1}, resultsOD{k, 2}, gt_OD);
 
     % ===================== STAMPA =====================
     fprintf('\n=== %s ===\n', nomeBase);
