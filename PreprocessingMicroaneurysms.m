@@ -1,58 +1,52 @@
-function results = PreprocessingMicroaneurysms(folder,numImages)
+function results = PreprocessingMicroaneurysms(folder, numImages)
 files = dir(fullfile(folder, '*.jpg'));
+results = cell(numImages, 3);
 
-results = cell(numImages,2); %CREO UN VETTORE IN QUESTO HA 5 CELLE PERCHÈ STIAMO CARICANDO 5 IMMAGINI
-    for k = 1:numImages
-        filename = fullfile(folder, files(k).name); %costruisce il percorso assoluto del file
-        startingImg = imread(filename);
-    
-        % Canale verde
-        greenChannelImg = startingImg(:,:,2);
-    
-        % Background subtraction
-        green_double = im2double(greenChannelImg);
-        background = imgaussfilt(green_double, 15);
-        subtracted = green_double - background;
-    
-        subtracted = subtracted - min(subtracted(:));
-        subtracted = subtracted / max(subtracted(:));
+for k = 1:numImages
+    filename = fullfile(folder, files(k).name);
+    startingImg = imread(filename);
 
-        green_ma_clahe = adapthisteq(subtracted, ...
-        'ClipLimit', 0.03, 'NumTiles', [16 16]); %Il contrasto è più alto e va a rifinire aree più piccole
+    % Canale verde
+    green_double = im2double(startingImg(:,:,2));
 
+    % Background subtraction con sigma piccolo per preservare i MA
+    subtracted = green_double - imgaussfilt(green_double, 15);
+    subtracted = subtracted - min(subtracted(:));
+    subtracted = subtracted / max(subtracted(:));
 
-        % Black Top-Hat: evidenzia strutture scure piccole (i MA)
-        se_tophat = strel('disk', 6);
-        blackTopHat = imbothat(green_ma_clahe, se_tophat);
+    % CLAHE su regioni piccole per esaltare dettagli fini
+    green_ma_clahe = adapthisteq(subtracted, ...
+        'ClipLimit', 0.03, 'NumTiles', [16 16]);
 
+    % Black Top-Hat: estrae strutture scure più piccole del disco
+    se_tophat = strel('disk', 6);
+    blackTopHat = imbothat(green_ma_clahe, se_tophat);
 
-         % Soglia adattiva sulla risposta del top-hat
-        ma_binary = imbinarize(blackTopHat, 'adaptive', ...
-            'Sensitivity', 0.3, 'ForegroundPolarity', 'bright');
-    
-        % Filtra per dimensione: MA tipici sono 3-60 pixel
-        ma_binary = bwareaopen(ma_binary, 3);
-        ma_binary = bwareafilt(ma_binary, [3 60]);
-    
-        % Filtra per circolarità: i vasi sono allungati, i MA sono rotondi
-        props = regionprops(ma_binary, 'Eccentricity');
+    % --- Segmentazione adattiva ---
+    ma_adaptive = imbinarize(blackTopHat, 'adaptive', ...
+        'Sensitivity', 0.3, 'ForegroundPolarity', 'bright');
+    ma_adaptive = filterMA(ma_adaptive);
+
+    % --- Segmentazione Otsu ---
+    ma_otsu = blackTopHat > graythresh(blackTopHat);
+    %ma_otsu = filterMA(ma_otsu);
+
+    results{k, 1} = ma_adaptive;
+    results{k, 2} = ma_otsu;
+    results{k, 3} = startingImg;
+end
+end
+
+% Funzione di supporto condivisa per entrambe le segmentazioni
+function ma_binary = filterMA(ma_binary)
+% Calcola le proprietà delle regioni connesse
+    props = regionprops(ma_binary, 'Eccentricity');
+   if ~isempty(props)
         eccentricities = [props.Eccentricity];
+        % Trova le label degli oggetti troppo allungati in un colpo solo
+        labelsToRemove = find(eccentricities > 0.85);
+        % Rimuovili tutti insieme con ismember
         labels = bwlabel(ma_binary);
-        for i = 1:length(props)
-            if eccentricities(i) > 0.85  % rimuovi oggetti troppo allungati
-                ma_binary(labels == i) = 0;
-            end
-        end
-
-    
-       
-
-
-        % Il risultato viene salvato su due celle differenti
-        
-        
-        results{k, 1} = startingImg; %Ho inserito una nuova cella per ospitare l'immagine di partenza, proveniente da questa funzione
-        results{k,2}=ma_binary;
-    
+        ma_binary = ~ismember(labels, labelsToRemove) & ma_binary;
     end
 end

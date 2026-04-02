@@ -30,6 +30,7 @@ numImmagini = 3;
 % ===================== PREPROCESSING =====================
 results = PreprocessingSegmentation(folderImg, numImmagini);
 resultsOD = PreprocessingOpticDisc(folderImg, numImmagini);
+resultsMA = PreprocessingMicroaneurysms(folderImg,numImmagini)
 % ===================== LOOP =====================
 for k = 1:numImmagini
 
@@ -85,7 +86,7 @@ for k = 1:numImmagini
     segmentedOtsu = logical(results{k, 2});
 
     % ===================== METRICHE =====================
-    m_MA = EvaluationSegmentation(segmentedIter, segmentedOtsu, gt_MA);
+    m_MA = EvaluationSegmentation(resultsMA{k, 1}, resultsMA{k, 2}, gt_MA);
     m_HE = EvaluationSegmentation(segmentedIter, segmentedOtsu, gt_HE);
     m_EX = EvaluationSegmentation(segmentedIter, segmentedOtsu, gt_EX);
     m_SE = EvaluationSegmentation(segmentedIter, segmentedOtsu, gt_SE);
