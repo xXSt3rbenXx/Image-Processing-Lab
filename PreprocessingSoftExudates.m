@@ -1,28 +1,29 @@
-function results = PreprocessingSoftExudates(folder, numImages)
+function results = PreprocessingSoftExudates(folder,startImg, numImages)
 files = dir(fullfile(folder, '*.jpg'));
 results = cell(numImages, 3);
 
-for k = 1:numImages
+for k = startImg:numImages
     filename = fullfile(folder, files(k).name);
     startingImg = imread(filename);
 
-    % Canale verde
-    red_double = im2double(startingImg(:,:,1));
+% Media pesata dei canali R e G per vedere se ci sono miglioramenti
+combined = 0.7 * im2double(startingImg(:,:,1)) + ...
+           0.3 * im2double(startingImg(:,:,2));
 
     % Background subtraction con sigma intermedio
     
-    subtracted = red_double - imgaussfilt(red_double, 30);
+    subtracted = combined - imgaussfilt(combined, 30);
     subtracted = subtracted - min(subtracted(:));
     subtracted = subtracted / max(subtracted(:));
 
     % CLAHE standard
-    green_clahe = adapthisteq(subtracted, ...
+    combined_clahe = adapthisteq(subtracted, ...
         'ClipLimit', 0.02, 'NumTiles', [8 8]);
 
     % White Top-Hat: estrae strutture BRILLANTI più piccole dell'elemento strutturante
     % I SE sono chiari sullo sfondo scuro — opposto dei MA
     se_tophat = strel('disk', 15);
-    whiteTopHat = imtophat(green_clahe, se_tophat);
+    whiteTopHat = imtophat(combined_clahe, se_tophat);
 
     % --- Segmentazione adattiva ---
     se_adaptive = imbinarize(whiteTopHat, 'adaptive', ...

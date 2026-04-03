@@ -1,8 +1,8 @@
-function results = PreprocessingSegmentation(folder,numImages)
+function results = PreprocessingSegmentation(folder,startImg,numImages)
 files = dir(fullfile(folder, '*.jpg'));
 
 results = cell(numImages,3); %CREO UN VETTORE IN QUESTO HA 5 CELLE PERCHÈ STIAMO CARICANDO 5 IMMAGINI
-    for k = 1:numImages
+    for k = startImg:numImages
         filename = fullfile(folder, files(k).name); %costruisce il percorso assoluto del file
         startingImg = imread(filename);
     

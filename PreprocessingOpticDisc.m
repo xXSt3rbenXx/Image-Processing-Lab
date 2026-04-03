@@ -1,8 +1,8 @@
-function result= PreprocessingOpticDisc(folder,numImages)
+function result= PreprocessingOpticDisc(folder,startImg,numImages)
     
     files = dir(fullfile(folder, '*.jpg'));
     result = cell(numImages,3);
-    for k = 1:numImages
+    for k = startImg:numImages
        filename = fullfile(folder, files(k).name); %costruisce il percorso assoluto del file
        startingImg = imread(filename);
        greenChannelImg = im2double(startingImg(:,:,2));

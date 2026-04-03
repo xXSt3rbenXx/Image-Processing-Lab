@@ -1,8 +1,8 @@
-function results = PreprocessingMicroaneurysms(folder, numImages)
+function results = PreprocessingMicroaneurysms(folder,startImg, numImages)
 files = dir(fullfile(folder, '*.jpg'));
 results = cell(numImages, 3);
 
-for k = 1:numImages
+for k = startImg:numImages
     filename = fullfile(folder, files(k).name);
     startingImg = imread(filename);
 

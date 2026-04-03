@@ -16,7 +16,7 @@ files = dir(fullfile(folderImg, '*.jpg')); %Cerca solo file jpg
 filesMicroaneurysms = dir(fullfile(folderMicroaneurysms, '*.tif'));
 filesHaemorrhages   = dir(fullfile(folderHaemorrhages,   '*.tif'));
 filesHardExudates   = dir(fullfile(folderHardExudates,   '*.tif'));
-filesSoftExudates   = [dir(fullfile(folderSoftExudates, '*.tif')); dir(fullfile(folderSoftExudates, '*.tiff'))];
+filesSoftExudates   = [dir(fullfile(folderSoftExudates, '*.tif')); dir(fullfile(folderSoftExudates, '*.tiff'))]; %Alcuni sono tif, altri tiff
 filesOpticDisc      = dir(fullfile(folderOpticDisc,      '*.tif'));
 
 % ===================== CHECK =====================
@@ -25,16 +25,17 @@ if isempty(files)
 end
 
 % ===================== NUMERO IMMAGINI =====================
-numImmagini = 3;
+startImg=5;
+numImmagini = 6;
 
 % ===================== PREPROCESSING =====================
-results = PreprocessingSegmentation(folderImg, numImmagini);
-resultsOD = PreprocessingOpticDisc(folderImg, numImmagini);
-resultsMA = PreprocessingMicroaneurysms(folderImg,numImmagini);
-resultsSE = PreprocessingSoftExudates(folderImg, numImmagini);
-resultsEX = PreprocessingHardExudates(folderImg, numImmagini);
+results = PreprocessingSegmentation(folderImg,startImg, numImmagini);
+resultsOD = PreprocessingOpticDisc(folderImg,startImg, numImmagini);
+resultsMA = PreprocessingMicroaneurysms(folderImg,startImg,numImmagini);
+resultsSE = PreprocessingSoftExudates(folderImg,startImg, numImmagini);
+resultsEX = PreprocessingHardExudates(folderImg,startImg, numImmagini);
 % ===================== LOOP =====================
-for k = 1:numImmagini
+for k = startImg:numImmagini
 
     nomeBase = files(k).name(1:8);
 
@@ -51,6 +52,7 @@ for k = 1:numImmagini
     end
 
     % ===================== CARICAMENTO GT =====================
+    %Nel caso fosse un file rgb lo converte in scala di grigi
     gt_MA = imread(fullfile(filesMicroaneurysms(idxMA).folder, filesMicroaneurysms(idxMA).name)) > 0;
     if size(gt_MA, 3)==3
         gt_MA=rgb2gray(gt_MA)>0;
