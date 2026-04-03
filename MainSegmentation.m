@@ -25,8 +25,8 @@ if isempty(files)
 end
 
 % ===================== NUMERO IMMAGINI =====================
-startImg=5;
-numImmagini = 6;
+startImg=40;
+numImmagini = 41;
 
 % ===================== PREPROCESSING =====================
 results = PreprocessingSegmentation(folderImg,startImg, numImmagini);
@@ -85,16 +85,16 @@ for k = startImg:numImmagini
     end
 
     % ===================== RISULTATI =====================
-    startingImg   = results{k, 3};
-    segmentedIter = logical(results{k, 1});
-    segmentedOtsu = logical(results{k, 2});
+    startingImg   = results{(k-startImg+1), 3};
+    segmentedIter = logical(results{(k-startImg+1), 1});
+    segmentedOtsu = logical(results{(k-startImg+1), 2});
 
     % ===================== METRICHE =====================
-    m_MA = EvaluationSegmentation(resultsMA{k, 1}, resultsMA{k, 2}, gt_MA);
+    m_MA = EvaluationSegmentation(resultsMA{(k-startImg+1), 1}, resultsMA{(k-startImg+1), 2}, gt_MA);
     m_HE = EvaluationSegmentation(segmentedIter, segmentedOtsu, gt_HE);
-    m_EX = EvaluationSegmentation(resultsEX{k, 1}, resultsEX{k,2}, gt_EX);
-    m_SE = EvaluationSegmentation(resultsSE{k,1}, resultsSE{k,2}, gt_SE);
-    m_OD = EvaluationSegmentation(resultsOD{k, 1}, resultsOD{k, 2}, gt_OD);
+    m_EX = EvaluationSegmentation(resultsEX{(k-startImg+1), 1}, resultsEX{(k-startImg+1),2}, gt_EX);
+    m_SE = EvaluationSegmentation(resultsSE{(k-startImg+1),1}, resultsSE{(k-startImg+1),2}, gt_SE);
+    m_OD = EvaluationSegmentation(resultsOD{(k-startImg+1), 1}, resultsOD{(k-startImg+1), 2}, gt_OD);
 
     % ===================== STAMPA =====================
     fprintf('\n=== %s ===\n', nomeBase);

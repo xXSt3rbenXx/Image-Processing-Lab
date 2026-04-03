@@ -1,6 +1,6 @@
 function results = PreprocessingSoftExudates(folder,startImg, numImages)
 files = dir(fullfile(folder, '*.jpg'));
-results = cell(numImages, 3);
+results = cell((numImages-startImg+1), 3);
 
 for k = startImg:numImages
     filename = fullfile(folder, files(k).name);
@@ -34,9 +34,9 @@ combined = 0.7 * im2double(startingImg(:,:,1)) + ...
     se_otsu = whiteTopHat > graythresh(whiteTopHat);
     se_otsu = filterSE(se_otsu);
 
-    results{k, 1} = se_adaptive;
-    results{k, 2} = se_otsu;
-    results{k, 3} = startingImg;
+    results{(k-startImg+1), 1} = se_adaptive;
+    results{(k-startImg+1), 2} = se_otsu;
+    results{(k-startImg+1), 3} = startingImg;
 end
 end
 

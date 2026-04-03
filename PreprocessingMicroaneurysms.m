@@ -1,6 +1,6 @@
 function results = PreprocessingMicroaneurysms(folder,startImg, numImages)
 files = dir(fullfile(folder, '*.jpg'));
-results = cell(numImages, 3);
+results = cell((numImages-startImg+1), 3);
 
 for k = startImg:numImages
     filename = fullfile(folder, files(k).name);
@@ -31,9 +31,9 @@ for k = startImg:numImages
     ma_otsu = blackTopHat > graythresh(blackTopHat);
     %ma_otsu = filterMA(ma_otsu);
 
-    results{k, 1} = ma_adaptive;
-    results{k, 2} = ma_otsu;
-    results{k, 3} = startingImg;
+    results{(k-startImg+1), 1} = ma_adaptive;
+    results{(k-startImg+1), 2} = ma_otsu;
+    results{(k-startImg+1), 3} = startingImg;
 end
 end
 

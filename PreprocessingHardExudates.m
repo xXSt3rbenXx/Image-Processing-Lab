@@ -1,7 +1,7 @@
 function result = PreprocessingHardExudates(folder,startImg, numImages)
 
 files  = dir(fullfile(folder, '*.jpg'));
-result = cell(numImages, 3);
+result = cell((numImages-startImg+1), 3);
 
 for k = startImg:numImages
     filename    = fullfile(folder, files(k).name);
@@ -51,8 +51,8 @@ for k = startImg:numImages
     mask_otsu = imclose(mask_otsu, strel('disk', 2));
 
     % Salvataggio
-    result{k, 1} = mask_percentile;
-    result{k, 2} = mask_otsu;
-    result{k, 3} = startingImg;
+    result{(k-startImg+1), 1} = mask_percentile;
+    result{(k-startImg+1), 2} = mask_otsu;
+    result{(k-startImg+1), 3} = startingImg;
 end
 end

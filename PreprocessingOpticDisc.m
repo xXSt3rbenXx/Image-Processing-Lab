@@ -1,7 +1,7 @@
 function result= PreprocessingOpticDisc(folder,startImg,numImages)
     
     files = dir(fullfile(folder, '*.jpg'));
-    result = cell(numImages,3);
+    result = cell((numImages-startImg+1),3);
     for k = startImg:numImages
        filename = fullfile(folder, files(k).name); %costruisce il percorso assoluto del file
        startingImg = imread(filename);
@@ -33,8 +33,8 @@ function result= PreprocessingOpticDisc(folder,startImg,numImages)
 
 
         %Salvataggio
-        result{k, 1}=mask_iter;
-        result{k, 2}=mask_otsu;
-        result{k, 3}=startingImg;
+        result{(k-startImg+1), 1}=mask_iter;
+        result{(k-startImg+1), 2}=mask_otsu;
+        result{(k-startImg+1), 3}=startingImg;
     end
 end
