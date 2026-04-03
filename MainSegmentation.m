@@ -32,6 +32,7 @@ results = PreprocessingSegmentation(folderImg, numImmagini);
 resultsOD = PreprocessingOpticDisc(folderImg, numImmagini);
 resultsMA = PreprocessingMicroaneurysms(folderImg,numImmagini);
 resultsSE = PreprocessingSoftExudates(folderImg, numImmagini);
+resultsEX = PreprocessingHardExudates(folderImg, numImmagini);
 % ===================== LOOP =====================
 for k = 1:numImmagini
 
@@ -89,7 +90,7 @@ for k = 1:numImmagini
     % ===================== METRICHE =====================
     m_MA = EvaluationSegmentation(resultsMA{k, 1}, resultsMA{k, 2}, gt_MA);
     m_HE = EvaluationSegmentation(segmentedIter, segmentedOtsu, gt_HE);
-    m_EX = EvaluationSegmentation(segmentedIter, segmentedOtsu, gt_EX);
+    m_EX = EvaluationSegmentation(resultsEX{k, 1}, resultsEX{k,2}, gt_EX);
     m_SE = EvaluationSegmentation(resultsSE{k,1}, resultsSE{k,2}, gt_SE);
     m_OD = EvaluationSegmentation(resultsOD{k, 1}, resultsOD{k, 2}, gt_OD);
 
