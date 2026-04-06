@@ -1,88 +1,78 @@
-function results = PreprocessingSoftExudates(folder,startImg, numImages)
-files = dir(fullfile(folder, '*.jpg'));
-results = cell((numImages-startImg+1), 3);
-
-for k = startImg:numImages
-    filename = fullfile(folder, files(k).name);
-    startingImg = imread(filename);
-
-% Media pesata dei canali R e G per vedere se ci sono miglioramenti
-%combined = 0.7 * im2double(startingImg(:,:,1)) + ...
-           %0.3 * im2double(startingImg(:,:,2));
-
-
-%PROVO SOLO CON CANALE VERDE AGGIUNGENDO UN MASCHERA FOV
-    combined = im2double(startingImg(:, :, 2));
-    mask_FOV=imbinarize(combined, 0.05);
-    mask_FOV=imfill(mask_FOV, 'holes');
-    mask_FOV=imerode(mask_FOV, strel ('disk', 20));
-
-
-    % Background subtraction con sigma intermedio
+function results = PreprocessingSoftExudates(folder, startImg, numImages)
+    files = dir(fullfile(folder, '*.jpg'));
+    results = cell((numImages-startImg+1), 3);
     
-    subtracted = combined - imgaussfilt(combined, 30);
-    subtracted = subtracted - min(subtracted(:));
-    subtracted = subtracted / max(subtracted(:));
-
-    % CLAHE standard
-    combined_clahe = adapthisteq(subtracted, ...
-        'ClipLimit', 0.02, 'NumTiles', [8 8]);
-
-    % White Top-Hat: estrae strutture BRILLANTI più piccole dell'elemento strutturante
-    % I SE sono chiari sullo sfondo scuro — opposto dei MA
-    %PROVO CON UN DISK DI 25
-    se_tophat = strel('disk', 25);
-    whiteTopHat = imtophat(combined_clahe, se_tophat);
-
-    % --- Segmentazione adattiva ---
-    %se_adaptive = imbinarize(whiteTopHat, 'adaptive', ...
-     %   'Sensitivity', 0.3, 'ForegroundPolarity', 'bright');
-    %se_adaptive = filterSE(se_adaptive);
-    %MI ESCE COME RISULTATO 0     
-
-
-    fprintf('Max whiteTopHat img %d: %.4f\n', k, max(whiteTopHat(:)));
-fprintf('Soglia adattiva img %d: %.4f\n', k, graythresh(whiteTopHat));
-
-    %   CAMBIO IL METODO DI SEGMETANZIONE ADATTIVA (USO IL METODO DEL
-    %   PERCENTILE)
-
-    if ~isempty(whiteTopHat)
-    pixels_FOV  = whiteTopHat(mask_FOV);
-thresh_per  = prctile(pixels_FOV, 99.5);
-        se_adaptive = (whiteTopHat > thresh_per) & mask_FOV;
-    else
-        se_adaptive = false(size(I));
+    for k = startImg:numImages
+        filename = fullfile(folder, files(k).name);
+        img = imread(filename);
+        
+        % 1. MIX CANALI: Bilanciamo R e G per esaltare i SE rispetto allo sfondo
+        I = 0.5 * im2double(img(:,:,1)) + 0.5 * im2double(img(:,:,2));
+        
+        % 2. MASCHERA FOV (Field of View) - Essenziale per non segmentare il bordo nero
+        mask_FOV = imbinarize(im2double(img(:,:,2)), 0.05);
+        mask_FOV = imfill(mask_FOV, 'holes');
+        mask_FOV = imerode(mask_FOV, strel('disk', 30));
+        
+        % 3. RIMOZIONE BACKGROUND (Sigma alto per preservare macchie larghe)
+        bg = imgaussfilt(I, 50); 
+        subtracted = I - bg;
+        subtracted = max(subtracted, 0); 
+        subtracted = subtracted / max(subtracted(:));
+        
+        % 4. ENHANCEMENT E TOP-HAT
+        combined_clahe = adapthisteq(subtracted, 'ClipLimit', 0.02);
+        se_tophat_elem = strel('disk', 35); 
+        whiteTopHat = imtophat(combined_clahe, se_tophat_elem);
+        
+        % 5. SEGMENTAZIONE ADATTIVA (Percentile dinamico)
+        pixels_inside = whiteTopHat(mask_FOV);
+        if ~isempty(pixels_inside)
+            % Usiamo un percentile più alto (99.2) per ridurre i falsi positivi
+            thresh_per = prctile(pixels_inside, 99.2);
+            se_adaptive = (whiteTopHat > thresh_per) & mask_FOV;
+        else
+            se_adaptive = false(size(I));
+        end
+        
+        % 6. FILTRAGGIO AVANZATO (Vedi funzione sotto)
+        se_adaptive = filterSE_Final(se_adaptive, whiteTopHat);
+        
+        % 7. SEGMENTAZIONE OTSU (Come confronto)
+        se_otsu = whiteTopHat > (graythresh(whiteTopHat) * 0.9);
+        se_otsu = filterSE_Final(se_otsu & mask_FOV, whiteTopHat);
+        
+        results{(k-startImg+1), 1} = se_adaptive;
+        results{(k-startImg+1), 2} = se_otsu;
+        results{(k-startImg+1), 3} = img;
     end
-    fprintf('Pixel trovati PRIMA filterSE img %d: %d\n', k, sum(se_adaptive(:)));
-    se_adaptive=filterSE(se_adaptive);
-
-fprintf('Pixel trovati DOPO filterSE img %d: %d\n', k, sum(se_adaptive(:)));
-    
-    % --- Segmentazione Otsu ---
-    se_otsu = whiteTopHat > graythresh(whiteTopHat);
-    se_otsu = filterSE(se_otsu);
-
-    results{(k-startImg+1), 1} = se_adaptive;
-    results{(k-startImg+1), 2} = se_otsu;
-    results{(k-startImg+1), 3} = startingImg;
-end
 end
 
-function se_binary = filterSE(se_binary)
-    % Rimuovi rumore piccolo e strutture troppo grandi
-    se_binary = bwareaopen(se_binary, 50);
-    se_binary = bwareafilt(se_binary, [50 5000]);
-
-
-
-    % Filtra per circolarità — SE hanno forme irregolari
-    % soglia più permissiva rispetto ai MA (0.85)
-    props = regionprops(se_binary, 'Eccentricity');
-    if ~isempty(props)
-        eccentricities = [props.Eccentricity];
-        labelsToRemove = find(eccentricities > 0.95);
-        labels = bwlabel(se_binary);
-        se_binary = ~ismember(labels, labelsToRemove) & se_binary;
+function se_binary = filterSE_Final(se_binary, img_ref)
+    % Rimuove il rumore puntiforme (Microaneurismi o artefatti)
+    se_binary = bwareaopen(se_binary, 300); 
+    
+    % Analisi delle proprietà geometriche
+    % I SE sono ovali/tondeggianti, i vasi sono lunghi (alta eccentricità)
+    props = regionprops(se_binary, 'Area', 'Solidity', 'Eccentricity');
+    
+    if isempty(props)
+        se_binary = false(size(se_binary));
+        return;
     end
+    
+    % CRITERI DI FILTRAGGIO:
+    % - Area: tra 400 e 40.000 pixel (per IDRiD_08)
+    % - Eccentricità < 0.90: elimina i vasi sanguigni (che sono linee)
+    % - Solidità > 0.40: elimina strutture troppo frastagliate
+    keepIdx = ([props.Area] > 400 & [props.Area] < 40000 & ...
+               [props.Eccentricity] < 0.90 & ...
+               [props.Solidity] > 0.40);
+    
+    labels = bwlabel(se_binary);
+    se_binary = ismember(labels, find(keepIdx));
+    
+    % Chiusura per compattare le "nuvole" di essudati
+    se_binary = imclose(se_binary, strel('disk', 8));
+    se_binary = imfill(se_binary, 'holes');
 end
