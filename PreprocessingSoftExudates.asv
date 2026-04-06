@@ -46,18 +46,15 @@ fprintf('Soglia adattiva img %d: %.4f\n', k, graythresh(whiteTopHat));
 
     %   CAMBIO IL METODO DI SEGMETANZIONE ADATTIVA (USO IL METODO DEL
     %   PERCENTILE)
-
     if ~isempty(whiteTopHat)
-    pixels_FOV  = whiteTopHat(mask_FOV);
-thresh_per  = prctile(pixels_FOV, 99.5);
+        thresh_per      = prctile(whiteTopHat, 97.5);
         se_adaptive = (whiteTopHat > thresh_per) & mask_FOV;
     else
         se_adaptive = false(size(I));
     end
-    fprintf('Pixel trovati PRIMA filterSE img %d: %d\n', k, sum(se_adaptive(:)));
-    se_adaptive=filterSE(se_adaptive);
+    se_Adapt
 
-fprintf('Pixel trovati DOPO filterSE img %d: %d\n', k, sum(se_adaptive(:)));
+
     
     % --- Segmentazione Otsu ---
     se_otsu = whiteTopHat > graythresh(whiteTopHat);
@@ -72,8 +69,9 @@ end
 function se_binary = filterSE(se_binary)
     % Rimuovi rumore piccolo e strutture troppo grandi
     se_binary = bwareaopen(se_binary, 50);
-    se_binary = bwareafilt(se_binary, [50 5000]);
-
+    %se_binary = bwareafilt(se_binary, [50 5000]);
+    %PROVO CON UN RANGE PIù GRANDE (grande pixel essudati piccoli)
+    se_binary=bwareafilt(se_binary, [200 15000]);
 
 
     % Filtra per circolarità — SE hanno forme irregolari
