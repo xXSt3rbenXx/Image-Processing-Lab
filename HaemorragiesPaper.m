@@ -1,7 +1,7 @@
 function result = HaemorragiesPaper(folder, startImg, numImages)
 
 files = dir(fullfile(folder, '*.jpg'));
-result = cell((numImages-startImg+1),3);
+result = cell((numImages-startImg+1),2);
 
 for k = startImg:numImages
     % --- 1. Leggi immagine e canale verde ---
@@ -9,12 +9,12 @@ for k = startImg:numImages
     img = imread(filename);
     I = im2double(img(:,:,2));
      % --- Applico un semplice mean filter ---
-    h = fspecial('average', [5 5]);
-    I_mean = imfilter(I, h);
+    h = fspecial('average', [3 3]);
+    I_mean = imfilter(I, h,'replicate');
      % --- Contrast Enhancement---
     J = imadjust(I_mean); %MATLAB applica automaticamente il "1% saturation"
     % --- the picture is binarized using a novel local adaptive thresholding---
-    T = adaptthresh(J, 0.5, 'ForegroundPolarity', 'dark', 'Statistic', 'gaussian');
+    T = adaptthresh(J, 0.6, 'ForegroundPolarity', 'dark', 'Statistic', 'gaussian');
     BW = imbinarize(J, T);
     % --- Morphological operations---
     SE = strel('disk', 4); % Il raggio dipende dalla risoluzione, 3-5 è tipico
@@ -30,7 +30,7 @@ for k = startImg:numImages
     
     % 3. Filtra gli oggetti basandoti sulle proprietà
     % Esempio: teniamo solo oggetti con area > 20 e non troppo lunghi
-    idx = find([stats.Area] > 20 & [stats.Eccentricity] < 0.9);
+    idx = find([stats.Area] > 100 & [stats.Eccentricity] < 0.8);
     
     % 4. Crea la maschera finale pulita
     BW_emorragie_final = ismember(labelmatrix(CC), idx);

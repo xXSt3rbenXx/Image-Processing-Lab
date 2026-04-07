@@ -27,8 +27,8 @@ if isempty(files)
 end
 
 % ===================== NUMERO IMMAGINI =====================
-startImg    = 1;
-numImmagini = 5;
+startImg    = 3;
+numImmagini = 3;
 
 % ===================== PREPROCESSING =====================
 results   = PreprocessingSegmentation(folderImg,   startImg, numImmagini);
