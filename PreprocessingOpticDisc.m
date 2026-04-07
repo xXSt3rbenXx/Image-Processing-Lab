@@ -13,16 +13,12 @@ function result= PreprocessingOpticDisc(folder,startImg,numImages)
 
 
        % level = graythresh(greenChannelEqualized) * 2.0; %PROVIAMO CON UNA SOGLIA ANCORAPIù ALTA
-       level_iter = prctile(greenChannelEqualized(:), 98);%uso il percentile per i più brillanti 
-       mask_iter = greenChannelEqualized > level_iter;
-
-                % Rimuoviamo oggetti troppo piccoli (rumore) che non possono essere essudati
-        mask_iter = bwareafilt(mask_iter, 1); 
-        
-        % Chiusura per unire essudati vicini che si sono frammentati
-        se = strel('disk', 15);
-        mask_iter = imclose(mask_iter, se);
-        mask_iter = imfill(mask_iter, 'holes');
+       level_adaptive = prctile(greenChannelEqualized(:), 98);%uso il percentile per i più brillanti 
+       mask_adaptive = greenChannelEqualized > level_adaptive;
+       mask_adaptive = bwareafilt(mask_adaptive, 1); 
+       se = strel('disk', 15);
+       mask_adaptive = imclose(mask_adaptive, se);
+       mask_adaptive = imfill(mask_adaptive, 'holes');
 
         %CALCOLO SOGLIA OTTIMALE CON OTSU
         level_otsu=graythresh(greenChannelEqualized);
@@ -33,7 +29,7 @@ function result= PreprocessingOpticDisc(folder,startImg,numImages)
 
 
         %Salvataggio
-        result{(k-startImg+1), 1}=mask_iter;
+        result{(k-startImg+1), 1}=mask_adaptive;
         result{(k-startImg+1), 2}=mask_otsu;
         result{(k-startImg+1), 3}=startingImg;
     end

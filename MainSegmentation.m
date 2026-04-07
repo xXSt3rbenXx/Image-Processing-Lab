@@ -27,8 +27,8 @@ if isempty(files)
 end
 
 % ===================== NUMERO IMMAGINI =====================
-startImg    = 17;
-numImmagini = 23;
+startImg    = 1;
+numImmagini = 5;
 
 % ===================== PREPROCESSING =====================
 results   = PreprocessingSegmentation(folderImg,   startImg, numImmagini);
@@ -36,6 +36,7 @@ resultsOD = PreprocessingOpticDisc(folderImg,      startImg, numImmagini);
 resultsMA = PreprocessingMicroaneurysms(folderImg, startImg, numImmagini);
 resultsSE = PreprocessingSoftExudates(folderImg,   startImg, numImmagini);
 resultsEX = PreprocessingHardExudates(folderImg,   startImg, numImmagini);
+resultsHE = PreprocessingHaemorragies(folderImg,   startImg, numImmagini);
 
 % ===================== LOOP =====================
 for k = startImg:numImmagini
@@ -86,17 +87,10 @@ for k = startImg:numImmagini
     segmentedIter = logical(results{idx, 1});
     segmentedOtsu = logical(results{idx, 2});
 
-    % ===================== DEBUG SE =====================
-    pred_SE = logical(resultsSE{idx, 1});
-    fprintf('--- DEBUG SE %s ---\n', nomeBase);
-    fprintf('File SE caricato:   %s\n', filesSoftExudates(max(idxSE,1)).name);
-    fprintf('Pixel predetti SE:  %d\n', sum(pred_SE(:)));
-    fprintf('Pixel GT SE:        %d\n', sum(gt_SE(:)));
-    fprintf('Overlap (TP):       %d\n', sum(pred_SE(:) & gt_SE(:)));
 
     % ===================== METRICHE =====================
     m_MA = EvaluationSegmentation(resultsMA{idx,1}, resultsMA{idx,2}, gt_MA);
-    m_HE = EvaluationSegmentation(segmentedIter,    segmentedOtsu,    gt_HE);
+    m_HE = EvaluationSegmentation(resultsHE{idx,1}, resultsHE{idx,2}, gt_HE);
     m_EX = EvaluationSegmentation(resultsEX{idx,1}, resultsEX{idx,2}, gt_EX);
     m_SE = EvaluationSegmentation(resultsSE{idx,1}, resultsSE{idx,2}, gt_SE);
     m_OD = EvaluationSegmentation(resultsOD{idx,1}, resultsOD{idx,2}, gt_OD);
