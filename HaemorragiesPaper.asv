@@ -7,7 +7,7 @@ for k = startImg:numImages
     % --- 1. Leggi immagine e canale verde/blu ---
     filename = fullfile(folder, files(k).name); 
     img = imread(filename);
-    I =im2double(img(:,:,2))+0.7*im2double(img(:,:,3));
+    I = 0.3*im2double(img(:,:,2))+0.7*im2double(img(:,:,3));
 
 
     % 2. MASCHERA FOV
@@ -29,7 +29,7 @@ for k = startImg:numImages
     I_clean = medfilt2(I_enhanced, [3 3]);
 
 
-    I_enhanced = adapthisteq(I_clean, 'ClipLimit', 0.02, 'NumTiles', [8 8]);
+    I_enhanced = adapthisteq(I_mean, 'ClipLimit', 0.02, 'NumTiles', [8 8]);
     background=imgaussfilt(I_enhanced,15);
     I_sub=imsubtract(background,I_enhanced);
    
@@ -50,7 +50,7 @@ for k = startImg:numImages
     
     % 3. Filtra gli oggetti basandoti sulle proprietà
     
-    idx = find([stats.Area] > 120 & [stats.Eccentricity] < 0.75 & [stats.Solidity] > 0.65);
+    idx = find([stats.Area] > 100 & [stats.Eccentricity] < 0.7 & [stats.Solidity] > 0.6);
     
     % 4. Crea la maschera finale pulita
     BW_emorragie_final = ismember(labelmatrix(CC), idx);

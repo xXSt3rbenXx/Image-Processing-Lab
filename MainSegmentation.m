@@ -28,7 +28,7 @@ end
 
 % ===================== NUMERO IMMAGINI =====================
 startImg    = 3;
-numImmagini = 3;
+numImmagini = 4;
 
 % ===================== PREPROCESSING =====================
 results   = PreprocessingSegmentation(folderImg,   startImg, numImmagini);
@@ -90,7 +90,7 @@ for k = startImg:numImmagini
 
     % ===================== METRICHE =====================
     m_MA = EvaluationSegmentation(resultsMA{idx,1}, resultsMA{idx,2}, gt_MA);
-    m_HE = EvaluationSegmentation(resultsPaper{idx,1}, resultsHE{idx,2}, gt_HE);
+    m_HE = EvaluationSegmentation(resultsHE{idx,1}, resultsHE{idx,2}, gt_HE);
     m_EX = EvaluationSegmentation(resultsEX{idx,1}, resultsEX{idx,2}, gt_EX);
     m_SE = EvaluationSegmentation(resultsSE{idx,1}, resultsSE{idx,2}, gt_SE);
     m_OD = EvaluationSegmentation(resultsOD{idx,1}, resultsOD{idx,2}, gt_OD);
