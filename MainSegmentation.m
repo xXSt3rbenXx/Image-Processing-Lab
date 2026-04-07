@@ -27,8 +27,8 @@ if isempty(files)
 end
 
 % ===================== NUMERO IMMAGINI =====================
-startImg    = 3;
-numImmagini = 4;
+startImg    = 16;
+numImmagini = 17;
 
 % ===================== PREPROCESSING =====================
 results   = PreprocessingSegmentation(folderImg,   startImg, numImmagini);
@@ -90,7 +90,7 @@ for k = startImg:numImmagini
 
     % ===================== METRICHE =====================
     m_MA = EvaluationSegmentation(resultsMA{idx,1}, resultsMA{idx,2}, gt_MA);
-    m_HE = EvaluationSegmentation(resultsHE{idx,1}, resultsHE{idx,2}, gt_HE);
+    m_HE = EvaluationSegmentation(resultsPaper{idx,1}, resultsHE{idx,2}, gt_HE);
     m_EX = EvaluationSegmentation(resultsEX{idx,1}, resultsEX{idx,2}, gt_EX);
     m_SE = EvaluationSegmentation(resultsSE{idx,1}, resultsSE{idx,2}, gt_SE);
     m_OD = EvaluationSegmentation(resultsOD{idx,1}, resultsOD{idx,2}, gt_OD);
@@ -106,19 +106,36 @@ for k = startImg:numImmagini
     printRow('Disco Ottico',   m_OD);
 
     % ===================== FIGURA =====================
-    figure(idx); clf;
+    figure(idx)
+    clf;
     set(gcf, 'Name', ['Test: ', nomeBase], 'NumberTitle', 'off');
 
-    subplot(2,4,1); imshow(startingImg);   title('Originale');
-    subplot(2,4,2); imshow(segmentedIter); title('Iterativa');
-    xlabel(makeLabel(m_MA, m_HE, m_EX, m_SE, m_OD, 'iter'), 'FontSize', 8);
-    subplot(2,4,3); imshow(segmentedOtsu); title('Otsu');
-    xlabel(makeLabel(m_MA, m_HE, m_EX, m_SE, m_OD, 'otsu'), 'FontSize', 8);
-    subplot(2,4,4); imshow(gt_MA); title('Microaneurismi');
-    subplot(2,4,5); imshow(gt_HE); title('Emorragie');
-    subplot(2,4,6); imshow(gt_EX); title('Hard Exudates');
-    subplot(2,4,7); imshow(gt_SE); title('Soft Exudates');
-    subplot(2,4,8); imshow(gt_OD); title('Optic Disc');
+    subplot(2,4,1)
+    imshow(startingImg)   
+    title('Originale')
+    subplot(2,4,2)
+    imshow(segmentedIter)
+    title('Iterativa')
+    xlabel(makeLabel(m_MA, m_HE, m_EX, m_SE, m_OD, 'iter'), 'FontSize', 8)
+    subplot(2,4,3)
+    imshow(segmentedOtsu)
+    title('Otsu')
+    xlabel(makeLabel(m_MA, m_HE, m_EX, m_SE, m_OD, 'otsu'), 'FontSize', 8)
+    subplot(2,4,4)
+    imshow(gt_MA)
+    title('Microaneurismi')
+    subplot(2,4,5)
+    imshow(gt_HE)
+    title('Emorragie')
+    subplot(2,4,6)
+    imshow(gt_EX)
+    title('Hard Exudates')
+    subplot(2,4,7)
+    imshow(gt_SE)
+    title('Soft Exudates')
+    subplot(2,4,8)
+    imshow(gt_OD)
+    title('Optic Disc')
     drawnow;
 
 end

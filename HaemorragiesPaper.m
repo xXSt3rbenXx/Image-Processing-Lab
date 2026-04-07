@@ -1,62 +1,63 @@
 function result = HaemorragiesPaper(folder, startImg, numImages)
-
-files = dir(fullfile(folder, '*.jpg'));
-result = cell((numImages-startImg+1),2);
-
-for k = startImg:numImages
-    % --- 1. Leggi immagine e canale verde/blu ---
-    filename = fullfile(folder, files(k).name); 
-    img = imread(filename);
-    I =im2double(img(:,:,2))+0.7*im2double(img(:,:,3));
-
-
-    % 2. MASCHERA FOV
-    mask_FOV = imbinarize(I, 0.05);
-    mask_FOV = imfill(mask_FOV, 'holes');
-    mask_FOV = imerode(mask_FOV, strel('disk', 20));
-
+    files = dir(fullfile(folder, '*.jpg'));
+    result = cell((numImages-startImg+1), 2);
     
-
-     % --- Applico un semplice median filter ---
-   
-    I_mean = medfilt2(I, [3 3]);
-
-    I_enhanced = zeros(size(I));
-    I_retina   = I_mean(mask_FOV);
-    if ~isempty(I_retina)
-        I_enhanced(mask_FOV) = imadjust(I_mean(mask_FOV));
+    for k = startImg:numImages
+        filename = fullfile(folder, files(k).name); 
+        img = imread(filename);
+        G = im2double(img(:,:,2));
+        
+        % 1. Maschera FOV (Erosione decisa per pulire i bordi)
+        mask_FOV = imbinarize(G, 0.05);
+        mask_FOV = imfill(mask_FOV, 'holes');
+        mask_FOV = imerode(mask_FOV, strel('disk', 30));
+        
+        % 2. FILTRO MULTISCALA (Bottom-Hat a due dimensioni)
+        % Estraiamo sia le lesioni piccole che quelle grandi
+        I_small = imbothat(G, strel('disk', 8));  % Per micro-emorragie
+        I_large = imbothat(G, strel('disk', 25)); % Per emorragie estese
+        I_combined = max(I_small, I_large);       % Uniamo il segnale migliore
+        
+        % 3. Pre-processing e Normalizzazione
+        I_en = adapthisteq(I_combined, 'ClipLimit', 0.025);
+        I_en(~mask_FOV) = 0;
+        
+        % 4. BINARIZZAZIONE ADATTIVA (Soglia dinamica)
+        % Portiamo la sensibilità a 0.5 per bilanciare Sens/Spec
+        T = adaptthresh(I_en, 0.2, 'ForegroundPolarity', 'bright', 'Statistic', 'mean');
+        BW = imbinarize(I_en, T);
+        BW = BW & mask_FOV;
+        
+        % 5. Pulizia e Rimozione Vasi Sanguigni
+        % Rimuoviamo gli oggetti troppo sottili che sono sicuramente vasi
+        BW = bwareaopen(BW, 50); 
+        BW = imclose(BW, strel('disk', 2));
+        
+        % 6. FILTRAGGIO GEOMETRICO AVANZATO
+        CC = bwconncomp(BW);
+        stats = regionprops(CC, 'Area', 'Eccentricity', 'Solidity', 'Extent');
+        
+        % Inizializziamo la maschera
+        BW_final = false(size(G));
+        L = labelmatrix(CC);
+        
+        for i = 1:CC.NumObjects
+            % Parametri chiave per il Dice:
+            % Solidity > 0.45: Le emorragie sono più piene del rumore
+            % Extent > 0.25: Rapporto tra area dell'oggetto e del suo bounding box
+            % Eccentricity < 0.95: Scarta i vasi molto lunghi
+            if stats(i).Area > 80 && stats(i).Area < 30000
+                if stats(i).Eccentricity < 0.94 && stats(i).Solidity > 0.45 && stats(i).Extent > 0.25
+                    BW_final(L == i) = true;
+                end
+            end
+        end
+        
+        % 7. Pulizia Finale Bordi
+        BW_final = imclearborder(BW_final);
+        
+        % 8. Output
+        result{k-startImg+1, 1} = BW_final;
+        result{k-startImg+1, 2} = img;
     end
-    I_clean = medfilt2(I_enhanced, [3 3]);
-
-
-    I_enhanced = adapthisteq(I_clean, 'ClipLimit', 0.02, 'NumTiles', [8 8]);
-    background=imgaussfilt(I_enhanced,15);
-    I_sub=imsubtract(background,I_enhanced);
-   
-    % --- the picture is binarized using a novel local adaptive thresholding---
-    T = adaptthresh(I_sub, 0.6, 'ForegroundPolarity', 'dark', 'Statistic', 'gaussian');
-    BW = imbinarize(I_sub, T);
-    % --- Morphological operations---
-    SE = strel('disk', 4); % Il raggio dipende dalla risoluzione, 3-5 è tipico
-    BW_closed = imclose(BW, SE);
-    P = 50; % Rimuove tutto ciò che è più piccolo di 30 pixel
-    BW_final = bwareaopen(BW_closed, P);
-    % --- Region of Interest using Connected Component Labelling---
-    % 1. Trova tutti gli oggetti connessi
-    CC = bwconncomp(BW_final); 
-    
-    % 2. Estrai le proprietà geometriche (Area, Eccentricità, etc.)
-    stats = regionprops(CC, 'Area', 'Eccentricity', 'Solidity');
-    
-    % 3. Filtra gli oggetti basandoti sulle proprietà
-    
-    idx = find([stats.Area] > 120 & [stats.Eccentricity] < 0.75 & [stats.Solidity] > 0.65);
-    
-    % 4. Crea la maschera finale pulita
-    BW_emorragie_final = ismember(labelmatrix(CC), idx);
-
-    % --- Salvataggio ---
-    result{k-startImg+1, 1} = BW_emorragie_final;
-    result{k-startImg+1, 2} = img;
-
 end
