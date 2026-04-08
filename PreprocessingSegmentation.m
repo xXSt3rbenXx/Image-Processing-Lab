@@ -11,7 +11,7 @@ results = cell((numImages-startImg+1),3); %CREO UN VETTORE IN QUESTO HA 5 CELLE 
     
         % Background subtraction
         green_double = im2double(greenChannelImg);
-        background = imgaussfilt(green_double, 50);
+        background = imgaussfilt(green_double, 2);
         subtracted = green_double - background;
     
         subtracted = subtracted - min(subtracted(:));
