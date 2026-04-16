@@ -41,13 +41,9 @@ for k = startImg:numImages
     mask_percentile = imfill(mask_percentile, 'holes');
     mask_percentile = bwareafilt(mask_percentile, [25 10000]);
 
-    % --- METODO OTSU — percentile 95 ---
-    if ~isempty(I_retina)
-        thresh_otsu = prctile(I_clean(mask_FOV), 95);
-        mask_otsu   = (I_clean > thresh_otsu) & mask_FOV;
-    else
-        mask_otsu = false(size(I));
-    end
+    % --- METODO OTSU 
+    level_otsu = graythresh(I_clean);
+    mask_otsu  = I_clean > level_otsu;
     mask_otsu = imclose(mask_otsu, strel('disk', 4));
     mask_otsu = imdilate(mask_otsu, strel('disk', 2));
     mask_otsu = imfill(mask_otsu, 'holes');
